@@ -411,6 +411,46 @@ const MOVIES = [
   {t:"animal crossing 관련 다큐/리뷰 영상", w:"지금 맡은 픽셀 오피스 프로젝트 레퍼런스 직결"}
 ];
 
+const GENERAL_MOVIES = [
+  {t:"인턴", w:"편하게 웃으면서 볼 수 있는 힐링 무비"},
+  {t:"어바웃 타임", w:"하루 마무리로 보기 좋은 잔잔한 로맨스"},
+  {t:"라라랜드", w:"음악과 색감이 예쁜 클래식한 선택"},
+  {t:"미나리", w:"잔잔하게 몰입되는 가족 이야기"},
+  {t:"기생충", w:"긴장감 있게 몰아보고 싶은 날"},
+  {t:"월터의 상상은 현실이 된다", w:"환기가 필요한 날 보기 좋은 모험"},
+  {t:"코코", w:"가볍게 감동받고 싶을 때"},
+  {t:"주토피아", w:"머리 비우고 즐겁게 볼 애니메이션"}
+];
+
+const DRAMAS = [
+  {t:"미스터 션샤인", w:"몰입감 높은 시대극, 정주행 추천"},
+  {t:"이상한 변호사 우영우", w:"따뜻하고 산뜻하게 볼 수 있는 드라마"},
+  {t:"동백꽃 필 무렵", w:"대사와 연출이 좋아서 글쓰기에도 참고되는 작품"},
+  {t:"나의 아저씨", w:"감정선이 섬세한 인생 드라마"},
+  {t:"슬기로운 의사생활", w:"편안하게 정주행하기 좋은 힐링 드라마"},
+  {t:"더 글로리", w:"몰입감 있게 긴장하며 볼 수 있는 작품"},
+  {t:"눈물의 여왕", w:"가볍게 웃고 설레고 싶은 날"},
+  {t:"스물다섯 스물하나", w:"성우 연습용으로도 감정 표현 참고하기 좋아요"}
+];
+
+const MUSIC = [
+  {t:"아이유 - 밤편지", w:"차분하게 하루를 마무리하고 싶을 때"},
+  {t:"잔나비 - 주저하는 연인들을 위해", w:"편안하게 흥얼거리기 좋은 곡"},
+  {t:"백예린 - Square", w:"잔잔한 배경음악으로 좋아요"},
+  {t:"Lo-fi 스터디 플레이리스트", w:"집중하면서 작업할 때 틀어두기 좋아요"},
+  {t:"Standing Egg - 오래된 노래", w:"감성적인 하루 마무리용"},
+  {t:"재즈 피아노 플레이리스트", w:"카페 감성으로 여유롭게 듣기 좋아요"},
+  {t:"지브리 OST 모음", w:"작업하면서 듣기 좋은 잔잔한 배경음악"},
+  {t:"성시경 - 좋을텐데", w:"편안하게 듣기 좋은 발라드"}
+];
+
+const RECOMMEND_CATEGORIES = [
+  {label:"🎬 영화", list:()=>GENERAL_MOVIES},
+  {label:"🎨 감도 높은 영화", list:()=>MOVIES},
+  {label:"📺 드라마", list:()=>DRAMAS},
+  {label:"🎵 오늘의 음악", list:()=>MUSIC}
+];
+
 const DEFAULT_SECTIONS = [
   {id:"cat", label:"🐾 고양이 케어 (출근 전 필수)", items:[
     ["catWater","물 채워주기"],
@@ -602,11 +642,31 @@ function buildSectionCard(sec, day){
   }
 
   if(sec.id==='hobby'){
-    const sug = document.createElement('div');
-    sug.className = 'item-sub';
-    sug.style.padding = '6px 4px 0';
-    sug.textContent = '💡 오늘 추천: ' + HOBBY_SUGGEST[day];
-    card.appendChild(sug);
+    const sugLabel = document.createElement('div');
+    sugLabel.className = 'item-sub';
+    sugLabel.style.cssText = 'padding:6px 4px 6px;';
+    sugLabel.textContent = '💡 오늘 추천: ' + HOBBY_SUGGEST[day];
+    card.appendChild(sugLabel);
+
+    const chipRow = document.createElement('div');
+    chipRow.className = 'capacity-row';
+    const suggestResult = document.createElement('div');
+    suggestResult.className = 'movie-result';
+    RECOMMEND_CATEGORIES.forEach(cat=>{
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'cap-btn';
+      chip.textContent = cat.label;
+      chip.onclick = ()=>{
+        const list = cat.list();
+        const pick = list[Math.floor(Math.random()*list.length)];
+        suggestResult.style.display = 'block';
+        suggestResult.innerHTML = `<b>${pick.t}</b><br>${pick.w}`;
+      };
+      chipRow.appendChild(chip);
+    });
+    card.appendChild(chipRow);
+    card.appendChild(suggestResult);
 
     const btn = document.createElement('button');
     btn.className = 'movie-btn';

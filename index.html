@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>오늘의 방</title>
+<link rel="icon" href="icon.png" type="image/png">
+<link rel="apple-touch-icon" href="icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DynaPuff:wght@500;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -522,11 +524,6 @@ function updateProgress(){
   let done = allKeys.filter(k=>state[k]).length + (settings.worship && state.worshipDone ? 1:0);
   const pct = total? Math.round(done/total*100) : 0;
   $('progressFill').style.width = pct+"%";
-  const mascotEl = $('mascot');
-  if(pct===0) mascotEl.textContent="🐱";
-  else if(pct<40) mascotEl.textContent="😺";
-  else if(pct<80) mascotEl.textContent="😸";
-  else mascotEl.textContent="😻";
   $('greeting').textContent = pct===100 ? "오늘 할 일 다 끝냈어요! 잘했어요 🌿" : `오늘 ${pct}% 완료했어요`;
 }
 

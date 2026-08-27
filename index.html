@@ -224,6 +224,26 @@
     display:flex;align-items:center;gap:8px;justify-content:center;
   }
   .settings-open-btn:focus-visible{outline:2px solid var(--butter);outline-offset:2px;}
+  .journal-open-btn{
+    width:100%;border:2px solid var(--dusk);background:var(--sage-light);
+    border-radius:12px;padding:11px 14px;font-family:'Nunito',sans-serif;
+    font-weight:800;font-size:13px;cursor:pointer;color:var(--dusk);
+    display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:8px;
+  }
+  .journal-open-btn:focus-visible{outline:2px solid var(--butter);outline-offset:2px;}
+  select{
+    width:100%;border:2px solid var(--dusk);border-radius:12px;
+    font-family:'Nunito',sans-serif;font-size:13px;padding:10px;
+    background:var(--input-bg);font-weight:700;color:var(--dusk);margin-bottom:8px;
+  }
+  select:focus-visible{outline:2px solid var(--butter);}
+  .journal-entry{
+    background:var(--paper);border:2px solid var(--line);border-radius:12px;
+    padding:10px 12px;margin-bottom:10px;
+  }
+  .journal-entry-date{font-size:11.5px;font-weight:800;color:var(--dusk-soft);margin-bottom:4px;}
+  .journal-entry-text{font-size:13px;font-weight:600;line-height:1.5;color:var(--dusk);white-space:pre-line;}
+  .journal-empty{font-size:13px;font-weight:700;color:var(--dusk-soft);text-align:center;padding:24px 8px;}
 
   /* settings modal */
   .modal{
@@ -336,6 +356,7 @@
   <div class="month-avg" id="monthAvg"></div>
   <div class="cal-grid" id="calGrid"></div>
   <hr class="panel-divider">
+  <button class="journal-open-btn" id="openJournalBtn">📔 배움 메모장</button>
   <button class="settings-open-btn" id="openSettingsBtn">⚙️ 카테고리 · 일정 편집</button>
 </div>
 
@@ -348,13 +369,26 @@
     <div class="tab-row">
       <button class="tab-btn active" id="tabCategoryBtn">카테고리</button>
       <button class="tab-btn" id="tabScheduleBtn">일정</button>
+      <button class="tab-btn" id="tabLearnCatBtn">배움 카테고리</button>
     </div>
     <div id="tabCategory"></div>
     <div id="tabSchedule" style="display:none;"></div>
+    <div id="tabLearnCat" style="display:none;"></div>
     <div class="modal-footer">
       <button class="btn-secondary" id="cancelSettingsBtn">취소</button>
       <button class="btn-primary" id="saveSettingsBtn">저장</button>
     </div>
+  </div>
+</div>
+
+<div class="modal" id="journalModal" aria-hidden="true">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h2>📔 배움 메모장</h2>
+      <button class="icon-btn" id="closeJournalBtn" aria-label="메모장 닫기">✕</button>
+    </div>
+    <div class="capacity-row" id="journalCategoryRow" style="margin-bottom:14px;"></div>
+    <div id="journalList"></div>
   </div>
 </div>
 
@@ -577,6 +611,24 @@ function loadSections(){
 let sections = loadSections();
 let schedules = loadJSON('custom:schedules', DEFAULT_SCHEDULES);
 
+const DEFAULT_LEARN_CATEGORIES = ["UX/UI 디자인", "코딩", "그림/일러스트", "기타"];
+let learnCategories = loadJSON('custom:learnCategories', DEFAULT_LEARN_CATEGORIES);
+
+function loadLearnNote(dateKey){
+  try{
+    const raw = localStorage.getItem('learnNote:'+dateKey);
+    if(!raw) return {category:'', text:''};
+    try{
+      const parsed = JSON.parse(raw);
+      if(parsed && typeof parsed === 'object') return {category:parsed.category||'', text:parsed.text||''};
+    }catch(e){}
+    return {category:'', text: raw};
+  }catch(e){ return {category:'', text:''}; }
+}
+function saveLearnNote(dateKey, note){
+  try{ localStorage.setItem('learnNote:'+dateKey, JSON.stringify(note)); }catch(e){}
+}
+
 let state = {};
 let settings = { worship: false };
 
@@ -703,14 +755,33 @@ function buildSectionCard(sec, day){
   }
 
   if(sec.id==='learn'){
+    const note = loadLearnNote(viewDate);
+
+    const select = document.createElement('select');
+    select.setAttribute('aria-label','오늘의 배움 카테고리 선택');
+    const placeholderOpt = document.createElement('option');
+    placeholderOpt.value = '';
+    placeholderOpt.textContent = '카테고리 선택';
+    select.appendChild(placeholderOpt);
+    learnCategories.forEach(cat=>{
+      const opt = document.createElement('option');
+      opt.value = cat;
+      opt.textContent = cat;
+      select.appendChild(opt);
+    });
+    select.value = note.category;
+    select.addEventListener('change', ()=>{
+      note.category = select.value;
+      saveLearnNote(viewDate, note);
+    });
+    card.appendChild(select);
+
     const ta = document.createElement('textarea');
     ta.placeholder = '오늘 배운 내용 / 막힌 부분을 짧게 메모해두면, 다음에 대화할 때 이어서 코칭해줄 수 있어요';
-    try{
-      const v = localStorage.getItem('learnNote:'+viewDate);
-      if(v) ta.value = v;
-    }catch(e){}
+    ta.value = note.text;
     ta.addEventListener('blur', ()=>{
-      try{ localStorage.setItem('learnNote:'+viewDate, ta.value); }catch(e){}
+      note.text = ta.value;
+      saveLearnNote(viewDate, note);
     });
     card.appendChild(ta);
   }
@@ -878,10 +949,88 @@ function openPanel(){
 function closePanel(){
   $('sidePanel').classList.remove('open');
   $('sidePanel').setAttribute('aria-hidden','true');
-  if(!$('settingsModal').classList.contains('open')) $('overlay').classList.remove('show');
+  if(!$('settingsModal').classList.contains('open') && !$('journalModal').classList.contains('open')) $('overlay').classList.remove('show');
 }
 onActivate($('menuBtn'), openPanel);
 onActivate($('closePanelBtn'), closePanel);
+
+/* ---------- learning journal ---------- */
+
+let journalFilter = 'all';
+
+function collectJournalEntries(categoryFilter){
+  const entries = [];
+  for(let i=0;i<localStorage.length;i++){
+    const key = localStorage.key(i);
+    if(!key || key.indexOf('learnNote:')!==0) continue;
+    const dateKey = key.slice('learnNote:'.length);
+    const note = loadLearnNote(dateKey);
+    if(!note.text || !note.text.trim()) continue;
+    if(categoryFilter!=='all' && note.category!==categoryFilter) continue;
+    entries.push({date:dateKey, category:note.category, text:note.text});
+  }
+  entries.sort((a,b)=> a.date < b.date ? 1 : -1);
+  return entries;
+}
+
+function renderJournal(){
+  const row = $('journalCategoryRow');
+  row.innerHTML = '';
+  const allChip = document.createElement('button');
+  allChip.type = 'button';
+  allChip.className = 'cap-btn' + (journalFilter==='all'?' active':'');
+  allChip.textContent = '전체';
+  allChip.onclick = ()=>{ journalFilter='all'; renderJournal(); };
+  row.appendChild(allChip);
+  learnCategories.forEach(cat=>{
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'cap-btn' + (journalFilter===cat?' active':'');
+    chip.textContent = cat;
+    chip.onclick = ()=>{ journalFilter=cat; renderJournal(); };
+    row.appendChild(chip);
+  });
+
+  const list = $('journalList');
+  list.innerHTML = '';
+  const entries = collectJournalEntries(journalFilter);
+  if(entries.length===0){
+    const empty = document.createElement('div');
+    empty.className = 'journal-empty';
+    empty.textContent = '아직 이 카테고리로 남긴 메모가 없어요';
+    list.appendChild(empty);
+    return;
+  }
+  entries.forEach(entry=>{
+    const d = parseDateKey(entry.date);
+    const item = document.createElement('div');
+    item.className = 'journal-entry';
+    const dateEl = document.createElement('div');
+    dateEl.className = 'journal-entry-date';
+    dateEl.textContent = `${d.getMonth()+1}월 ${d.getDate()}일 (${DAY_NAMES[d.getDay()]})` + (entry.category?' · '+entry.category:'');
+    const textEl = document.createElement('div');
+    textEl.className = 'journal-entry-text';
+    textEl.textContent = entry.text;
+    item.appendChild(dateEl);
+    item.appendChild(textEl);
+    list.appendChild(item);
+  });
+}
+
+function openJournal(){
+  journalFilter = 'all';
+  renderJournal();
+  $('journalModal').classList.add('open');
+  $('journalModal').setAttribute('aria-hidden','false');
+  $('overlay').classList.add('show');
+}
+function closeJournal(){
+  $('journalModal').classList.remove('open');
+  $('journalModal').setAttribute('aria-hidden','true');
+  if(!$('sidePanel').classList.contains('open') && !$('settingsModal').classList.contains('open')) $('overlay').classList.remove('show');
+}
+onActivate($('openJournalBtn'), openJournal);
+onActivate($('closeJournalBtn'), closeJournal);
 
 /* ---------- settings modal: categories + schedule ---------- */
 
@@ -981,15 +1130,62 @@ function renderScheduleTab(){
   });
 }
 
+let draftLearnCategories = null;
+
+function renderLearnCatTab(){
+  const el = $('tabLearnCat');
+  el.innerHTML = "";
+  const wrap = document.createElement('div');
+  wrap.className = 'settings-section';
+  draftLearnCategories.forEach((cat, idx)=>{
+    const row = document.createElement('div');
+    row.className = 'edit-row';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = cat;
+    input.setAttribute('aria-label','배움 카테고리');
+    input.addEventListener('input', ()=>{ draftLearnCategories[idx] = input.value; });
+    const del = document.createElement('button');
+    del.className = 'del-btn';
+    del.type = 'button';
+    del.textContent = '✕';
+    del.setAttribute('aria-label','카테고리 삭제');
+    del.onclick = ()=>{
+      draftLearnCategories.splice(idx,1);
+      renderLearnCatTab();
+    };
+    row.appendChild(input);
+    row.appendChild(del);
+    wrap.appendChild(row);
+  });
+  const addBtn = document.createElement('button');
+  addBtn.className = 'add-item-btn';
+  addBtn.type = 'button';
+  addBtn.textContent = '+ 카테고리 추가';
+  addBtn.onclick = ()=>{
+    draftLearnCategories.push('');
+    renderLearnCatTab();
+  };
+  wrap.appendChild(addBtn);
+  el.appendChild(wrap);
+}
+
+const SETTINGS_TABS = ['Category','Schedule','LearnCat'];
+function showSettingsTab(name){
+  SETTINGS_TABS.forEach(t=>{
+    $('tab'+t).style.display = (t===name) ? 'block' : 'none';
+    $('tab'+t+'Btn').classList.toggle('active', t===name);
+  });
+}
+
 function openSettings(){
   draftSections = JSON.parse(JSON.stringify(sections));
   draftSchedules = JSON.parse(JSON.stringify(schedules));
+  draftLearnCategories = JSON.parse(JSON.stringify(learnCategories));
   renderCategoryTab();
   renderScheduleTab();
-  $('tabCategory').style.display = 'block';
-  $('tabSchedule').style.display = 'none';
-  $('tabCategoryBtn').classList.add('active');
-  $('tabScheduleBtn').classList.remove('active');
+  renderLearnCatTab();
+  showSettingsTab('Category');
   $('settingsModal').classList.add('open');
   $('settingsModal').setAttribute('aria-hidden','false');
   $('overlay').classList.add('show');
@@ -997,24 +1193,15 @@ function openSettings(){
 function closeSettings(){
   $('settingsModal').classList.remove('open');
   $('settingsModal').setAttribute('aria-hidden','true');
-  if(!$('sidePanel').classList.contains('open')) $('overlay').classList.remove('show');
+  if(!$('sidePanel').classList.contains('open') && !$('journalModal').classList.contains('open')) $('overlay').classList.remove('show');
 }
 onActivate($('openSettingsBtn'), openSettings);
 onActivate($('closeModalBtn'), closeSettings);
 onActivate($('cancelSettingsBtn'), closeSettings);
 
-onActivate($('tabCategoryBtn'), ()=>{
-  $('tabCategory').style.display = 'block';
-  $('tabSchedule').style.display = 'none';
-  $('tabCategoryBtn').classList.add('active');
-  $('tabScheduleBtn').classList.remove('active');
-});
-onActivate($('tabScheduleBtn'), ()=>{
-  $('tabCategory').style.display = 'none';
-  $('tabSchedule').style.display = 'block';
-  $('tabScheduleBtn').classList.add('active');
-  $('tabCategoryBtn').classList.remove('active');
-});
+onActivate($('tabCategoryBtn'), ()=>showSettingsTab('Category'));
+onActivate($('tabScheduleBtn'), ()=>showSettingsTab('Schedule'));
+onActivate($('tabLearnCatBtn'), ()=>showSettingsTab('LearnCat'));
 
 onActivate($('saveSettingsBtn'), ()=>{
   draftSections = draftSections.filter(sec=>sec.label.trim()!=='');
@@ -1023,17 +1210,19 @@ onActivate($('saveSettingsBtn'), ()=>{
   });
   sections = draftSections;
   schedules = draftSchedules;
+  learnCategories = draftLearnCategories.filter(cat=>cat.trim()!=='');
   saveJSON('custom:sections', sections);
   saveJSON('custom:schedules', schedules);
+  saveJSON('custom:learnCategories', learnCategories);
   try{ localStorage.removeItem('custom:itemDefs'); }catch(e){}
   closeSettings();
   closePanel();
   renderAll();
 });
 
-$('overlay').addEventListener('click', ()=>{ closePanel(); closeSettings(); });
+$('overlay').addEventListener('click', ()=>{ closePanel(); closeSettings(); closeJournal(); });
 document.addEventListener('keydown', (e)=>{
-  if(e.key==='Escape'){ closePanel(); closeSettings(); }
+  if(e.key==='Escape'){ closePanel(); closeSettings(); closeJournal(); }
 });
 
 loadState();

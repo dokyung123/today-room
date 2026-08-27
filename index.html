@@ -77,6 +77,17 @@
     display:flex;align-items:center;justify-content:center;
   }
   .menu-btn:focus-visible{outline:2px solid var(--butter);outline-offset:2px;}
+  .date-banner{
+    align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+    background:var(--blue-light);border:2px solid var(--dusk);border-radius:14px;
+    padding:10px 14px;margin-bottom:14px;font-weight:800;font-size:12.5px;color:var(--dusk);
+  }
+  .date-banner button{
+    border:2px solid var(--dusk);background:var(--paper);border-radius:10px;
+    padding:7px 12px;font-family:'Nunito',sans-serif;font-weight:800;font-size:12px;
+    cursor:pointer;color:var(--dusk);flex-shrink:0;
+  }
+  .date-banner button:focus-visible{outline:2px solid var(--butter);outline-offset:2px;}
   .card{
     background:var(--paper);
     border:2.5px solid var(--dusk);
@@ -200,7 +211,11 @@
   }
   .cal-cell.has-data{border-style:solid;border-color:var(--dusk);color:var(--dusk);}
   .cal-cell.today{border-width:2.5px;border-color:var(--dusk);}
+  .cal-cell.viewing{border-width:2.5px;border-style:solid;border-color:var(--blue);}
   .cal-cell.empty{visibility:hidden;}
+  .cal-cell[role="button"]{cursor:pointer;}
+  .cal-cell[role="button"]:focus-visible{outline:2px solid var(--butter);outline-offset:2px;}
+  .cal-cell[role="button"]:hover{border-color:var(--dusk);}
   .panel-divider{height:1px;background:var(--line);margin:18px 0;border:none;}
   .settings-open-btn{
     width:100%;border:2px solid var(--dusk);background:var(--butter-light);
@@ -271,6 +286,11 @@
 </head>
 <body>
 <div class="wrap">
+
+  <div class="date-banner" id="dateBanner" style="display:none;">
+    <span id="dateBannerText"></span>
+    <button type="button" id="backToTodayBtn">오늘로 돌아가기</button>
+  </div>
 
   <div class="header">
     <div class="mascot" id="mascot" aria-hidden="true">🐱</div>
@@ -345,6 +365,18 @@ function todayKey(){
   const d = new Date();
   return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,'0')+"-"+String(d.getDate()).padStart(2,'0');
 }
+function dateKeyOf(d){
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,'0')+"-"+String(d.getDate()).padStart(2,'0');
+}
+function parseDateKey(key){
+  return new Date(key+'T00:00:00');
+}
+function getViewDateFromHash(){
+  const h = decodeURIComponent(location.hash.replace('#',''));
+  if(/^\d{4}-\d{2}-\d{2}$/.test(h) && h <= todayKey()) return h;
+  return todayKey();
+}
+let viewDate = getViewDateFromHash();
 const DAY_NAMES = ["일","월","화","수","목","금","토"];
 
 const DEFAULT_SCHEDULES = {
@@ -549,10 +581,10 @@ let state = {};
 let settings = { worship: false };
 
 function loadState(){
-  state = loadJSON('daily:'+todayKey(), {});
+  state = loadJSON('daily:'+viewDate, {});
   settings = loadJSON('settings', { worship:false });
 }
-function saveState(){ saveJSON('daily:'+todayKey(), state); }
+function saveState(){ saveJSON('daily:'+viewDate, state); }
 function saveSettings(){ saveJSON('settings', settings); }
 
 function onActivate(el, fn){
@@ -588,7 +620,9 @@ function updateProgress(){
   let done = allKeys.filter(k=>state[k]).length + (settings.worship && state.worshipDone ? 1:0);
   const pct = total? Math.round(done/total*100) : 0;
   $('progressFill').style.width = pct+"%";
-  $('greeting').textContent = pct===100 ? "오늘 할 일 다 끝냈어요! 잘했어요 🌿" : `오늘 ${pct}% 완료했어요`;
+  const isToday = viewDate === todayKey();
+  const subject = isToday ? "오늘" : "이 날";
+  $('greeting').textContent = pct===100 ? `${subject} 할 일 다 끝냈어요! 잘했어요 🌿` : `${subject} ${pct}% 완료했어요`;
 }
 
 function renderCapacity(){
@@ -672,11 +706,11 @@ function buildSectionCard(sec, day){
     const ta = document.createElement('textarea');
     ta.placeholder = '오늘 배운 내용 / 막힌 부분을 짧게 메모해두면, 다음에 대화할 때 이어서 코칭해줄 수 있어요';
     try{
-      const v = localStorage.getItem('learnNote:'+todayKey());
+      const v = localStorage.getItem('learnNote:'+viewDate);
       if(v) ta.value = v;
     }catch(e){}
     ta.addEventListener('blur', ()=>{
-      try{ localStorage.setItem('learnNote:'+todayKey(), ta.value); }catch(e){}
+      try{ localStorage.setItem('learnNote:'+viewDate, ta.value); }catch(e){}
     });
     card.appendChild(ta);
   }
@@ -731,16 +765,39 @@ function renderSections(day){
 }
 
 function renderAll(){
-  const day = new Date().getDay();
-  $('dateLabel').textContent = `${new Date().getMonth()+1}월 ${new Date().getDate()}일 (${DAY_NAMES[day]})`;
+  const viewed = parseDateKey(viewDate);
+  const day = viewed.getDay();
+  const isToday = viewDate === todayKey();
+  $('dateLabel').textContent = `${viewed.getMonth()+1}월 ${viewed.getDate()}일 (${DAY_NAMES[day]})`;
   $('scheduleText').textContent = schedules[day];
   renderCapacity();
   renderSections(day);
   updateProgress();
+
+  const banner = $('dateBanner');
+  if(isToday){
+    banner.style.display = 'none';
+  } else {
+    banner.style.display = 'flex';
+    $('dateBannerText').textContent = `📅 ${viewed.getMonth()+1}월 ${viewed.getDate()}일 (${DAY_NAMES[day]}) 기록을 보고 있어요`;
+  }
+  $('resetBtn').textContent = isToday ? '오늘 체크 초기화' : '이 날 체크 초기화';
 }
 
+function backToToday(){
+  location.hash = '';
+}
+onActivate($('backToTodayBtn'), backToToday);
+
+window.addEventListener('hashchange', ()=>{
+  viewDate = getViewDateFromHash();
+  loadState();
+  renderAll();
+});
+
 $('resetBtn').onclick = ()=>{
-  if(confirm("오늘 체크한 항목을 전부 초기화할까요?")){
+  const isToday = viewDate === todayKey();
+  if(confirm(isToday ? "오늘 체크한 항목을 전부 초기화할까요?" : "이 날 체크한 항목을 전부 초기화할까요?")){
     state = {};
     saveState();
     renderAll();
@@ -783,14 +840,27 @@ function renderCalendar(){
   let sum = 0, count = 0;
   for(let d=1; d<=numDays; d++){
     const dateStr = year+"-"+String(month+1).padStart(2,'0')+"-"+String(d).padStart(2,'0');
-    const pct = dateStr <= todayStr ? dayPct(dateStr) : null;
+    const isPastOrToday = dateStr <= todayStr;
+    const pct = isPastOrToday ? dayPct(dateStr) : null;
     const cell = document.createElement('div');
-    cell.className = 'cal-cell' + (pct!==null?' has-data':'') + (dateStr===todayStr?' today':'');
+    cell.className = 'cal-cell' +
+      (pct!==null?' has-data':'') +
+      (dateStr===todayStr?' today':'') +
+      (dateStr===viewDate && dateStr!==todayStr?' viewing':'');
     cell.textContent = d;
     if(pct!==null){
       cell.style.background = `rgba(var(--sage-rgb), ${(0.12 + pct/100*0.68).toFixed(2)})`;
       cell.title = pct+"% 완료";
       sum += pct; count++;
+    }
+    if(isPastOrToday){
+      cell.tabIndex = 0;
+      cell.setAttribute('role','button');
+      cell.setAttribute('aria-label', dateStr+' 기록 보기');
+      onActivate(cell, ()=>{
+        location.hash = dateStr;
+        closePanel();
+      });
     }
     grid.appendChild(cell);
   }

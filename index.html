@@ -1,3 +1,8 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>오늘의 방</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DynaPuff:wght@500;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -9,6 +14,7 @@
     --dusk-soft:#5B5478;
     --sage:#7FA07A;
     --sage-light:#DCE9D8;
+    --sage-rgb:127,160,122;
     --rose:#E5A399;
     --rose-light:#F7DFDA;
     --butter:#F0BE5B;
@@ -20,48 +26,11 @@
     --amber-text:#B8862F;
     --input-bg:#FFFCF6;
   }
-  @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]){
-      --cream:#211D2E;
-      --paper:#2A2440;
-      --dusk:#F2ECDD;
-      --dusk-soft:#C6BEDB;
-      --sage:#8FBB89;
-      --sage-light:#37432F;
-      --rose:#EDB0A6;
-      --rose-light:#48302D;
-      --butter:#F3C766;
-      --butter-light:#463A21;
-      --blue:#8FB2D6;
-      --blue-light:#2E3D53;
-      --line:#453D5E;
-      --strike:#847BA0;
-      --amber-text:#E3B368;
-      --input-bg:#241F38;
-    }
-  }
-  :root[data-theme="dark"]{
-    --cream:#211D2E;
-    --paper:#2A2440;
-    --dusk:#F2ECDD;
-    --dusk-soft:#C6BEDB;
-    --sage:#8FBB89;
-    --sage-light:#37432F;
-    --rose:#EDB0A6;
-    --rose-light:#48302D;
-    --butter:#F3C766;
-    --butter-light:#463A21;
-    --blue:#8FB2D6;
-    --blue-light:#2E3D53;
-    --line:#453D5E;
-    --strike:#847BA0;
-    --amber-text:#E3B368;
-    --input-bg:#241F38;
-  }
   *{box-sizing:border-box;}
   @media (prefers-reduced-motion: reduce){
     *{transition:none !important;}
   }
+  html{background:var(--cream);color-scheme:light;}
   body{
     margin:0;
     font-family:'Nunito',sans-serif;
@@ -78,7 +47,7 @@
     padding:18px 20px;
     display:flex;
     align-items:center;
-    gap:16px;
+    gap:14px;
     box-shadow:5px 5px 0 var(--dusk);
     margin-bottom:18px;
   }
@@ -91,7 +60,7 @@
     border-radius:16px;
     flex-shrink:0;
   }
-  .header-text{flex:1;}
+  .header-text{flex:1;min-width:0;}
   .header-text h1{font-size:18px;color:var(--dusk);}
   .header-text p{margin:4px 0 0;font-size:13px;color:var(--dusk-soft);font-weight:600;}
   .progress-bar{
@@ -99,6 +68,13 @@
     border:1.5px solid var(--dusk);overflow:hidden;
   }
   .progress-fill{height:100%;background:var(--butter);width:0%;transition:width .3s;}
+  .menu-btn{
+    width:40px;height:40px;flex-shrink:0;
+    border:2px solid var(--dusk);border-radius:12px;
+    background:var(--paper);font-size:18px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .menu-btn:focus-visible{outline:2px solid var(--butter);outline-offset:2px;}
   .card{
     background:var(--paper);
     border:2.5px solid var(--dusk);
@@ -146,13 +122,14 @@
     transition:left .15s;
   }
   .toggle.on .toggle-knob{left:19px;}
-  textarea{
+  textarea,input[type="text"]{
     width:100%;border:2px solid var(--dusk);border-radius:12px;
     font-family:'Nunito',sans-serif;font-size:13px;padding:10px;
-    resize:vertical;min-height:56px;background:var(--input-bg);font-weight:600;
+    background:var(--input-bg);font-weight:600;
     color:var(--dusk);
   }
-  textarea:focus-visible{outline:2px solid var(--butter);}
+  textarea{resize:vertical;min-height:56px;}
+  textarea:focus-visible,input[type="text"]:focus-visible{outline:2px solid var(--butter);}
   .movie-btn{
     margin-top:10px;border:2px solid var(--dusk);background:var(--butter-light);
     border-radius:12px;padding:9px 14px;font-family:'Nunito',sans-serif;
@@ -185,17 +162,109 @@
     text-decoration:underline;cursor:pointer;
   }
   .reset-btn:focus-visible{outline:2px solid var(--butter);outline-offset:2px;}
-</style>
 
+  /* overlay shared by side panel + modal */
+  .overlay{
+    position:fixed;inset:0;background:rgba(51,44,74,.4);
+    opacity:0;pointer-events:none;transition:opacity .2s;z-index:40;
+  }
+  .overlay.show{opacity:1;pointer-events:auto;}
+
+  /* side panel */
+  .side-panel{
+    position:fixed;top:0;right:0;height:100%;
+    width:min(340px,86vw);
+    background:var(--paper);border-left:3px solid var(--dusk);
+    z-index:50;overflow-y:auto;padding:20px 18px 32px;
+    transform:translateX(100%);transition:transform .25s;
+  }
+  .side-panel.open{transform:translateX(0);}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .panel-head h2{font-size:16px;}
+  .icon-btn{
+    width:34px;height:34px;border:2px solid var(--dusk);border-radius:10px;
+    background:var(--paper);cursor:pointer;font-size:16px;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .icon-btn:focus-visible{outline:2px solid var(--butter);outline-offset:2px;}
+  .month-avg{font-size:13px;font-weight:700;color:var(--dusk-soft);margin-bottom:10px;}
+  .month-avg b{color:var(--dusk);font-family:'DynaPuff',cursive;font-size:18px;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
+  .cal-head{font-size:10px;text-align:center;color:var(--dusk-soft);font-weight:800;padding-bottom:2px;}
+  .cal-cell{
+    aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:800;border:1.5px dashed var(--line);color:var(--dusk-soft);
+    background:var(--cream);
+  }
+  .cal-cell.has-data{border-style:solid;border-color:var(--dusk);color:var(--dusk);}
+  .cal-cell.today{border-width:2.5px;border-color:var(--dusk);}
+  .cal-cell.empty{visibility:hidden;}
+  .panel-divider{height:1px;background:var(--line);margin:18px 0;border:none;}
+  .settings-open-btn{
+    width:100%;border:2px solid var(--dusk);background:var(--butter-light);
+    border-radius:12px;padding:11px 14px;font-family:'Nunito',sans-serif;
+    font-weight:800;font-size:13px;cursor:pointer;color:var(--dusk);
+    display:flex;align-items:center;gap:8px;justify-content:center;
+  }
+  .settings-open-btn:focus-visible{outline:2px solid var(--butter);outline-offset:2px;}
+
+  /* settings modal */
+  .modal{
+    position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;
+    padding:20px;opacity:0;pointer-events:none;transition:opacity .2s;
+  }
+  .modal.open{opacity:1;pointer-events:auto;}
+  .modal-card{
+    background:var(--paper);border:3px solid var(--dusk);border-radius:20px;
+    box-shadow:6px 6px 0 var(--dusk);width:min(560px,100%);max-height:85vh;
+    overflow-y:auto;padding:20px;
+  }
+  .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .modal-head h2{font-size:16px;}
+  .tab-row{display:flex;gap:6px;margin-bottom:16px;}
+  .tab-btn{
+    flex:1;padding:9px;border:2px solid var(--dusk);border-radius:10px;background:var(--paper);
+    font-family:'Nunito',sans-serif;font-weight:800;font-size:12.5px;cursor:pointer;color:var(--dusk-soft);
+  }
+  .tab-btn.active{background:var(--blue-light);color:var(--dusk);}
+  .settings-section{margin-bottom:18px;}
+  .settings-section h3{font-family:'DynaPuff',cursive;font-size:13.5px;margin-bottom:8px;color:var(--dusk);}
+  .edit-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+  .edit-row input[type="text"]{flex:1;padding:8px 10px;font-size:13px;}
+  .del-btn{
+    width:30px;height:30px;flex-shrink:0;border:2px solid var(--dusk);border-radius:8px;
+    background:var(--rose-light);color:var(--dusk);font-weight:900;cursor:pointer;
+  }
+  .del-btn:focus-visible{outline:2px solid var(--butter);outline-offset:2px;}
+  .add-item-btn{
+    border:2px dashed var(--dusk);background:transparent;border-radius:10px;
+    padding:8px;width:100%;font-family:'Nunito',sans-serif;font-weight:800;font-size:12.5px;
+    cursor:pointer;color:var(--dusk-soft);margin-top:2px;
+  }
+  .sched-row{margin-bottom:12px;}
+  .sched-row label{display:block;font-size:12.5px;font-weight:800;margin-bottom:5px;color:var(--dusk);}
+  .sched-row textarea{min-height:60px;font-size:12.5px;}
+  .modal-footer{display:flex;gap:8px;margin-top:6px;position:sticky;bottom:0;background:var(--paper);padding-top:10px;}
+  .btn-primary,.btn-secondary{
+    flex:1;padding:11px;border-radius:12px;font-family:'Nunito',sans-serif;
+    font-weight:800;font-size:13px;cursor:pointer;border:2px solid var(--dusk);
+  }
+  .btn-primary{background:var(--sage);color:var(--paper);}
+  .btn-secondary{background:var(--paper);color:var(--dusk);}
+  .btn-primary:focus-visible,.btn-secondary:focus-visible{outline:2px solid var(--butter);outline-offset:2px;}
+</style>
+</head>
+<body>
 <div class="wrap">
 
   <div class="header">
     <div class="mascot" id="mascot" aria-hidden="true">🐱</div>
-    <div class="header-text" style="flex:1">
+    <div class="header-text">
       <h1 id="dateLabel">오늘</h1>
       <p id="greeting">불러오는 중...</p>
       <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
     </div>
+    <button class="menu-btn" id="menuBtn" aria-label="메뉴 열기">📊</button>
   </div>
 
   <div class="card">
@@ -259,6 +328,38 @@
   </div>
 </div>
 
+<div class="overlay" id="overlay"></div>
+
+<div class="side-panel" id="sidePanel" aria-hidden="true">
+  <div class="panel-head">
+    <h2>📊 이번 달 달성도</h2>
+    <button class="icon-btn" id="closePanelBtn" aria-label="메뉴 닫기">✕</button>
+  </div>
+  <div class="month-avg" id="monthAvg"></div>
+  <div class="cal-grid" id="calGrid"></div>
+  <hr class="panel-divider">
+  <button class="settings-open-btn" id="openSettingsBtn">⚙️ 카테고리 · 일정 편집</button>
+</div>
+
+<div class="modal" id="settingsModal" aria-hidden="true">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h2>⚙️ 설정</h2>
+      <button class="icon-btn" id="closeModalBtn" aria-label="설정 닫기">✕</button>
+    </div>
+    <div class="tab-row">
+      <button class="tab-btn active" id="tabCategoryBtn">카테고리</button>
+      <button class="tab-btn" id="tabScheduleBtn">일정</button>
+    </div>
+    <div id="tabCategory"></div>
+    <div id="tabSchedule" style="display:none;"></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" id="cancelSettingsBtn">취소</button>
+      <button class="btn-primary" id="saveSettingsBtn">저장</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const $ = (id) => document.getElementById(id);
 
@@ -268,7 +369,7 @@ function todayKey(){
 }
 const DAY_NAMES = ["일","월","화","수","목","금","토"];
 
-const SCHEDULES = {
+const DEFAULT_SCHEDULES = {
   0: "11:40까지 예배 → 4시쯤 청년부 일정 끝 → 이후 교회 일정 또는 남자친구와 시간",
   1: "남자친구 만나는 날 🩷",
   2: "늦잠 시 8시 기상 → 알바 출근 (9:40~19:30) → 퇴근·식사 ~21시\n(회사 코딩교육/회의/프로젝트 변동 가능)",
@@ -332,27 +433,7 @@ const MOVIES = [
   {t:"animal crossing 관련 다큐/리뷰 영상", w:"지금 맡은 픽셀 오피스 프로젝트 레퍼런스 직결"}
 ];
 
-let state = {};
-let settings = { worship: false };
-
-function loadState(){
-  try{
-    const raw = localStorage.getItem('daily:'+todayKey());
-    state = raw ? JSON.parse(raw) : {};
-  }catch(e){ state = {}; }
-  try{
-    const raw = localStorage.getItem('settings');
-    settings = raw ? JSON.parse(raw) : { worship:false };
-  }catch(e){ settings = { worship:false }; }
-}
-function saveState(){
-  try{ localStorage.setItem('daily:'+todayKey(), JSON.stringify(state)); }catch(e){}
-}
-function saveSettings(){
-  try{ localStorage.setItem('settings', JSON.stringify(settings)); }catch(e){}
-}
-
-const ITEM_DEFS = {
+const DEFAULT_ITEM_DEFS = {
   cat: [
     ["catWater","물 채워주기"],
     ["catLitter","화장실 치우기"],
@@ -375,6 +456,37 @@ const ITEM_DEFS = {
     ["hobbyTime","취미/나를 위한 시간 갖기"]
   ]
 };
+
+const SECTION_META = [
+  {key:"cat", label:"🐾 고양이 케어"},
+  {key:"faith", label:"🕊️ 하나님과의 시간"},
+  {key:"care", label:"🧼 나를 돌보는 시간"},
+  {key:"learn", label:"🎨 오늘의 배움"},
+  {key:"hobby", label:"🌙 취미 & 나를 위한 시간"}
+];
+
+function loadJSON(key, fallback){
+  try{
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(fallback));
+  }catch(e){ return JSON.parse(JSON.stringify(fallback)); }
+}
+function saveJSON(key, value){
+  try{ localStorage.setItem(key, JSON.stringify(value)); }catch(e){}
+}
+
+let itemDefs = loadJSON('custom:itemDefs', DEFAULT_ITEM_DEFS);
+let schedules = loadJSON('custom:schedules', DEFAULT_SCHEDULES);
+
+let state = {};
+let settings = { worship: false };
+
+function loadState(){
+  state = loadJSON('daily:'+todayKey(), {});
+  settings = loadJSON('settings', { worship:false });
+}
+function saveState(){ saveJSON('daily:'+todayKey(), state); }
+function saveSettings(){ saveJSON('settings', settings); }
 
 function onActivate(el, fn){
   el.addEventListener('click', fn);
@@ -405,7 +517,7 @@ function renderList(containerId, defs){
 }
 
 function updateProgress(){
-  const allKeys = Object.values(ITEM_DEFS).flat().map(d=>d[0]);
+  const allKeys = Object.values(itemDefs).flat().map(d=>d[0]);
   const total = allKeys.length + (settings.worship?1:0);
   let done = allKeys.filter(k=>state[k]).length + (settings.worship && state.worshipDone ? 1:0);
   const pct = total? Math.round(done/total*100) : 0;
@@ -464,14 +576,14 @@ function renderCapacity(){
 function renderAll(){
   const day = new Date().getDay();
   $('dateLabel').textContent = `${new Date().getMonth()+1}월 ${new Date().getDate()}일 (${DAY_NAMES[day]})`;
-  $('scheduleText').textContent = SCHEDULES[day];
+  $('scheduleText').textContent = schedules[day];
   renderCapacity();
   $('learnFocus').textContent = "🎯 " + getLearnTaskForCapacity(state.capacity, day);
-  renderList('catList', ITEM_DEFS.cat);
-  renderList('faithList', ITEM_DEFS.faith);
-  renderList('careList', ITEM_DEFS.care);
-  renderList('learnList', ITEM_DEFS.learn);
-  renderList('hobbyList', ITEM_DEFS.hobby);
+  renderList('catList', itemDefs.cat);
+  renderList('faithList', itemDefs.faith);
+  renderList('careList', itemDefs.care);
+  renderList('learnList', itemDefs.learn);
+  renderList('hobbyList', itemDefs.hobby);
   $('hobbyList').insertAdjacentHTML('beforeend', `<div class="item-sub" style="padding:6px 4px 0;">💡 오늘 추천: ${HOBBY_SUGGEST[day]}</div>`);
   renderWorship();
   updateProgress();
@@ -508,6 +620,197 @@ $('resetBtn').onclick = ()=>{
   }
 };
 
+/* ---------- side panel: monthly achievement ---------- */
+
+function dayPct(dateStr){
+  const raw = (()=>{ try{ return localStorage.getItem('daily:'+dateStr); }catch(e){ return null; } })();
+  if(!raw) return null;
+  let rec;
+  try{ rec = JSON.parse(raw); }catch(e){ return null; }
+  const keys = Object.values(itemDefs).flat().map(d=>d[0]);
+  if(keys.length===0) return null;
+  const done = keys.filter(k=>rec[k]).length;
+  return Math.round(done/keys.length*100);
+}
+
+function renderCalendar(){
+  const now = new Date();
+  const year = now.getFullYear(), month = now.getMonth();
+  const todayStr = todayKey();
+  const numDays = new Date(year, month+1, 0).getDate();
+  const firstWeekday = new Date(year, month, 1).getDay();
+
+  const grid = $('calGrid');
+  grid.innerHTML = "";
+  DAY_NAMES.forEach(n=>{
+    const h = document.createElement('div');
+    h.className = 'cal-head';
+    h.textContent = n;
+    grid.appendChild(h);
+  });
+  for(let i=0;i<firstWeekday;i++){
+    const blank = document.createElement('div');
+    blank.className = 'cal-cell empty';
+    grid.appendChild(blank);
+  }
+  let sum = 0, count = 0;
+  for(let d=1; d<=numDays; d++){
+    const dateStr = year+"-"+String(month+1).padStart(2,'0')+"-"+String(d).padStart(2,'0');
+    const pct = dateStr <= todayStr ? dayPct(dateStr) : null;
+    const cell = document.createElement('div');
+    cell.className = 'cal-cell' + (pct!==null?' has-data':'') + (dateStr===todayStr?' today':'');
+    cell.textContent = d;
+    if(pct!==null){
+      cell.style.background = `rgba(var(--sage-rgb), ${(0.12 + pct/100*0.68).toFixed(2)})`;
+      cell.title = pct+"% 완료";
+      sum += pct; count++;
+    }
+    grid.appendChild(cell);
+  }
+  $('monthAvg').innerHTML = count>0
+    ? `이번 달 평균 <b>${Math.round(sum/count)}%</b>`
+    : `이번 달 기록이 아직 없어요`;
+}
+
+function openPanel(){
+  renderCalendar();
+  $('sidePanel').classList.add('open');
+  $('sidePanel').setAttribute('aria-hidden','false');
+  $('overlay').classList.add('show');
+}
+function closePanel(){
+  $('sidePanel').classList.remove('open');
+  $('sidePanel').setAttribute('aria-hidden','true');
+  if(!$('settingsModal').classList.contains('open')) $('overlay').classList.remove('show');
+}
+onActivate($('menuBtn'), openPanel);
+onActivate($('closePanelBtn'), closePanel);
+
+/* ---------- settings modal: categories + schedule ---------- */
+
+let draftItemDefs = null;
+let draftSchedules = null;
+
+function renderCategoryTab(){
+  const el = $('tabCategory');
+  el.innerHTML = "";
+  SECTION_META.forEach(sec=>{
+    const wrap = document.createElement('div');
+    wrap.className = 'settings-section';
+    const h3 = document.createElement('h3');
+    h3.textContent = sec.label;
+    wrap.appendChild(h3);
+
+    (draftItemDefs[sec.key] || []).forEach((pair, idx)=>{
+      const row = document.createElement('div');
+      row.className = 'edit-row';
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = pair[1];
+      input.setAttribute('aria-label', sec.label+' 항목');
+      input.addEventListener('input', ()=>{ draftItemDefs[sec.key][idx][1] = input.value; });
+      const del = document.createElement('button');
+      del.className = 'del-btn';
+      del.type = 'button';
+      del.textContent = '✕';
+      del.setAttribute('aria-label','항목 삭제');
+      del.onclick = ()=>{
+        draftItemDefs[sec.key].splice(idx,1);
+        renderCategoryTab();
+      };
+      row.appendChild(input);
+      row.appendChild(del);
+      wrap.appendChild(row);
+    });
+
+    const addBtn = document.createElement('button');
+    addBtn.className = 'add-item-btn';
+    addBtn.type = 'button';
+    addBtn.textContent = '+ 항목 추가';
+    addBtn.onclick = ()=>{
+      if(!draftItemDefs[sec.key]) draftItemDefs[sec.key] = [];
+      draftItemDefs[sec.key].push(['custom_'+Date.now(), '']);
+      renderCategoryTab();
+    };
+    wrap.appendChild(addBtn);
+    el.appendChild(wrap);
+  });
+}
+
+function renderScheduleTab(){
+  const el = $('tabSchedule');
+  el.innerHTML = "";
+  DAY_NAMES.forEach((name, day)=>{
+    const row = document.createElement('div');
+    row.className = 'sched-row';
+    const label = document.createElement('label');
+    label.textContent = name+'요일';
+    label.htmlFor = 'sched_'+day;
+    const ta = document.createElement('textarea');
+    ta.id = 'sched_'+day;
+    ta.value = draftSchedules[day] || '';
+    ta.addEventListener('input', ()=>{ draftSchedules[day] = ta.value; });
+    row.appendChild(label);
+    row.appendChild(ta);
+    el.appendChild(row);
+  });
+}
+
+function openSettings(){
+  draftItemDefs = JSON.parse(JSON.stringify(itemDefs));
+  draftSchedules = JSON.parse(JSON.stringify(schedules));
+  renderCategoryTab();
+  renderScheduleTab();
+  $('tabCategory').style.display = 'block';
+  $('tabSchedule').style.display = 'none';
+  $('tabCategoryBtn').classList.add('active');
+  $('tabScheduleBtn').classList.remove('active');
+  $('settingsModal').classList.add('open');
+  $('settingsModal').setAttribute('aria-hidden','false');
+  $('overlay').classList.add('show');
+}
+function closeSettings(){
+  $('settingsModal').classList.remove('open');
+  $('settingsModal').setAttribute('aria-hidden','true');
+  if(!$('sidePanel').classList.contains('open')) $('overlay').classList.remove('show');
+}
+onActivate($('openSettingsBtn'), openSettings);
+onActivate($('closeModalBtn'), closeSettings);
+onActivate($('cancelSettingsBtn'), closeSettings);
+
+onActivate($('tabCategoryBtn'), ()=>{
+  $('tabCategory').style.display = 'block';
+  $('tabSchedule').style.display = 'none';
+  $('tabCategoryBtn').classList.add('active');
+  $('tabScheduleBtn').classList.remove('active');
+});
+onActivate($('tabScheduleBtn'), ()=>{
+  $('tabCategory').style.display = 'none';
+  $('tabSchedule').style.display = 'block';
+  $('tabScheduleBtn').classList.add('active');
+  $('tabCategoryBtn').classList.remove('active');
+});
+
+onActivate($('saveSettingsBtn'), ()=>{
+  Object.keys(draftItemDefs).forEach(k=>{
+    draftItemDefs[k] = draftItemDefs[k].filter(pair=>pair[1].trim()!=='');
+  });
+  itemDefs = draftItemDefs;
+  schedules = draftSchedules;
+  saveJSON('custom:itemDefs', itemDefs);
+  saveJSON('custom:schedules', schedules);
+  closeSettings();
+  closePanel();
+  renderAll();
+});
+
+$('overlay').addEventListener('click', ()=>{ closePanel(); closeSettings(); });
+document.addEventListener('keydown', (e)=>{
+  if(e.key==='Escape'){ closePanel(); closeSettings(); }
+});
+
 loadState();
 renderAll();
 </script>
+</body>
+</html>

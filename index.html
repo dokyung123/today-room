@@ -426,16 +426,6 @@ const DEFAULT_SCHEDULES = {
   6: "격주 10~17:30 자격증 학원 · 19:30 찬양팀 연습 (결혼식 있는 주 있음)"
 };
 
-const LEARN_FOCUS = {
-  0: "오픈월드/픽셀 오피스 맵 레퍼런스 분석 or UX/UI 학습 이어가기",
-  1: "남자친구 만나는 날 — 학습은 쉬어가요",
-  2: "UX/UI 디자인 — 노션 학습 루틴 1챕터",
-  3: "코딩교육 있는 날 — 오늘 배운 것 정리",
-  4: "오늘 남은 시간에 맞게 자유롭게 학습을 이어가 보세요",
-  5: "이번 주 UX/UI 또는 코딩 중 밀린 것 따라잡기 (택1)",
-  6: "학원 없는 주 → 오픈월드/픽셀 오피스 맵 레퍼런스 분석 or 일러스트 연습"
-};
-
 const CAPACITY_OPTIONS = [
   {key:"none", label:"거의 없음"},
   {key:"tiny", label:"5~10분"},
@@ -447,13 +437,13 @@ function getLearnTaskForCapacity(cap, day){
   if(day===1) return "남자친구 만나는 날 — 학습은 쉬어가요";
   switch(cap){
     case "none":
-      return "오늘은 학습 패스! 최소 루틴(고양이·기도·위생)만 챙겨도 충분해요";
+      return "오늘은 학습 패스! 최소한만 챙겨도 충분해요";
     case "tiny":
-      return "노션 학습 루틴 딱 한 문단만 읽기 (실행보다 '펼쳐보기'가 목표)";
+      return "딱 한 걸음만 — 펼쳐보는 것만으로 충분해요 (실행보다 '펼쳐보기'가 목표)";
     case "small":
-      return "노션 학습 루틴 일부 or 어제 메모한 막힌 부분 하나만 풀어보기";
+      return "오늘 고른 카테고리에서 막혔던 부분 하나만 풀어보기";
     case "full":
-      return LEARN_FOCUS[day];
+      return "시간 여유가 있어요 — 오늘 고른 카테고리를 편하게 이어가 보세요";
     default:
       return "먼저 오늘 남은 시간을 체크해주세요 ⏱️";
   }

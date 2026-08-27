@@ -385,7 +385,10 @@
   <div class="modal-card">
     <div class="modal-head">
       <h2>📔 배움 메모장</h2>
-      <button class="icon-btn" id="closeJournalBtn" aria-label="메모장 닫기">✕</button>
+      <div style="display:flex;gap:6px;">
+        <button class="icon-btn" id="editJournalCatBtn" aria-label="배움 카테고리 편집" title="카테고리 편집">⚙️</button>
+        <button class="icon-btn" id="closeJournalBtn" aria-label="메모장 닫기">✕</button>
+      </div>
     </div>
     <div class="capacity-row" id="journalCategoryRow" style="margin-bottom:14px;"></div>
     <div id="journalList"></div>
@@ -688,7 +691,7 @@ function renderCapacity(){
     btn.setAttribute('role','radio');
     btn.setAttribute('aria-checked', String(state.capacity===opt.key));
     onActivate(btn, ()=>{
-      state.capacity = opt.key;
+      state.capacity = (state.capacity === opt.key) ? undefined : opt.key;
       saveState();
       renderAll();
     });
@@ -1031,6 +1034,11 @@ function closeJournal(){
 }
 onActivate($('openJournalBtn'), openJournal);
 onActivate($('closeJournalBtn'), closeJournal);
+onActivate($('editJournalCatBtn'), ()=>{
+  closeJournal();
+  openSettings();
+  showSettingsTab('LearnCat');
+});
 
 /* ---------- settings modal: categories + schedule ---------- */
 

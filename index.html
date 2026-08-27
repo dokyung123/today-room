@@ -1,0 +1,513 @@
+<title>오늘의 방</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DynaPuff:wght@500;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#FBF3E4;
+    --paper:#FFFDF8;
+    --dusk:#332C4A;
+    --dusk-soft:#5B5478;
+    --sage:#7FA07A;
+    --sage-light:#DCE9D8;
+    --rose:#E5A399;
+    --rose-light:#F7DFDA;
+    --butter:#F0BE5B;
+    --butter-light:#FBEACB;
+    --blue:#7C9FC0;
+    --blue-light:#DCE6F0;
+    --line:#E9DFCB;
+    --strike:#B7AF9C;
+    --amber-text:#B8862F;
+    --input-bg:#FFFCF6;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --cream:#211D2E;
+      --paper:#2A2440;
+      --dusk:#F2ECDD;
+      --dusk-soft:#C6BEDB;
+      --sage:#8FBB89;
+      --sage-light:#37432F;
+      --rose:#EDB0A6;
+      --rose-light:#48302D;
+      --butter:#F3C766;
+      --butter-light:#463A21;
+      --blue:#8FB2D6;
+      --blue-light:#2E3D53;
+      --line:#453D5E;
+      --strike:#847BA0;
+      --amber-text:#E3B368;
+      --input-bg:#241F38;
+    }
+  }
+  :root[data-theme="dark"]{
+    --cream:#211D2E;
+    --paper:#2A2440;
+    --dusk:#F2ECDD;
+    --dusk-soft:#C6BEDB;
+    --sage:#8FBB89;
+    --sage-light:#37432F;
+    --rose:#EDB0A6;
+    --rose-light:#48302D;
+    --butter:#F3C766;
+    --butter-light:#463A21;
+    --blue:#8FB2D6;
+    --blue-light:#2E3D53;
+    --line:#453D5E;
+    --strike:#847BA0;
+    --amber-text:#E3B368;
+    --input-bg:#241F38;
+  }
+  *{box-sizing:border-box;}
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;}
+  }
+  body{
+    margin:0;
+    font-family:'Nunito',sans-serif;
+    background:var(--cream);
+    color:var(--dusk);
+    padding:20px 14px 60px;
+  }
+  .wrap{max-width:640px;margin:0 auto;}
+  h1,h2,h3{font-family:'DynaPuff',cursive;margin:0;text-wrap:balance;}
+  .header{
+    background:var(--paper);
+    border:3px solid var(--dusk);
+    border-radius:22px;
+    padding:18px 20px;
+    display:flex;
+    align-items:center;
+    gap:16px;
+    box-shadow:5px 5px 0 var(--dusk);
+    margin-bottom:18px;
+  }
+  .mascot{
+    font-size:44px;
+    width:64px;height:64px;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--sage-light);
+    border:2px solid var(--dusk);
+    border-radius:16px;
+    flex-shrink:0;
+  }
+  .header-text{flex:1;}
+  .header-text h1{font-size:18px;color:var(--dusk);}
+  .header-text p{margin:4px 0 0;font-size:13px;color:var(--dusk-soft);font-weight:600;}
+  .progress-bar{
+    margin-top:8px;height:10px;border-radius:6px;background:var(--line);
+    border:1.5px solid var(--dusk);overflow:hidden;
+  }
+  .progress-fill{height:100%;background:var(--butter);width:0%;transition:width .3s;}
+  .card{
+    background:var(--paper);
+    border:2.5px solid var(--dusk);
+    border-radius:18px;
+    padding:16px 18px;
+    margin-bottom:16px;
+    box-shadow:4px 4px 0 var(--dusk);
+  }
+  .card h2{font-size:15px;display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+  .tag{
+    font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;
+    font-family:'Nunito',sans-serif;letter-spacing:.3px;
+  }
+  .tag.fixed{background:var(--blue-light);color:var(--blue);}
+  .schedule-text{font-size:13.5px;line-height:1.6;color:var(--dusk-soft);font-weight:600;white-space:pre-line;}
+  .item{
+    display:flex;align-items:flex-start;gap:10px;
+    padding:9px 4px;border-bottom:1px dashed var(--line);
+    cursor:pointer;user-select:none;border-radius:8px;
+  }
+  .item:last-child{border-bottom:none;}
+  .item:focus-visible,.toggle:focus-visible,.cap-btn:focus-visible{
+    outline:2px solid var(--butter);outline-offset:2px;
+  }
+  .checkbox{
+    width:20px;height:20px;flex-shrink:0;margin-top:1px;
+    border:2px solid var(--dusk);border-radius:6px;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--paper);font-size:12px;font-weight:900;
+    transition:background .15s;color:var(--paper);
+  }
+  .checkbox.checked{background:var(--sage);color:var(--paper);border-color:var(--sage);}
+  .item-text{font-size:13.5px;font-weight:700;line-height:1.4;}
+  .item-text.checked{text-decoration:line-through;color:var(--strike);}
+  .item-sub{font-size:11.5px;color:var(--dusk-soft);font-weight:600;margin-top:2px;}
+  .row-between{display:flex;justify-content:space-between;align-items:center;gap:12px;}
+  .toggle{
+    width:40px;height:22px;border-radius:20px;border:2px solid var(--dusk);
+    background:var(--line);position:relative;cursor:pointer;flex-shrink:0;
+  }
+  .toggle.on{background:var(--rose);}
+  .toggle-knob{
+    width:14px;height:14px;border-radius:50%;background:var(--paper);
+    border:2px solid var(--dusk);position:absolute;top:1px;left:1px;
+    transition:left .15s;
+  }
+  .toggle.on .toggle-knob{left:19px;}
+  textarea{
+    width:100%;border:2px solid var(--dusk);border-radius:12px;
+    font-family:'Nunito',sans-serif;font-size:13px;padding:10px;
+    resize:vertical;min-height:56px;background:var(--input-bg);font-weight:600;
+    color:var(--dusk);
+  }
+  textarea:focus-visible{outline:2px solid var(--butter);}
+  .movie-btn{
+    margin-top:10px;border:2px solid var(--dusk);background:var(--butter-light);
+    border-radius:12px;padding:9px 14px;font-family:'Nunito',sans-serif;
+    font-weight:800;font-size:12.5px;cursor:pointer;color:var(--dusk);
+  }
+  .movie-btn:active{transform:translateY(1px);}
+  .movie-btn:focus-visible{outline:2px solid var(--butter);outline-offset:2px;}
+  .movie-result{
+    margin-top:10px;background:var(--sage-light);border-radius:12px;padding:10px 12px;
+    font-size:12.5px;font-weight:700;line-height:1.5;display:none;color:var(--dusk);
+  }
+  .section-faith h2{color:var(--sage);}
+  .section-cat h2{color:var(--blue);}
+  .section-learn h2{color:var(--amber-text);}
+  .section-hobby h2{color:var(--rose);}
+  .footer-note{
+    text-align:center;font-size:11.5px;color:var(--dusk-soft);
+    font-weight:700;margin-top:24px;line-height:1.6;
+  }
+  .capacity-row{display:flex;gap:6px;flex-wrap:wrap;}
+  .cap-btn{
+    flex:1;min-width:70px;padding:10px 6px;border:2px solid var(--dusk);
+    border-radius:12px;background:var(--paper);font-family:'Nunito',sans-serif;
+    font-weight:800;font-size:12px;cursor:pointer;color:var(--dusk);text-align:center;
+  }
+  .cap-btn.active{background:var(--butter);}
+  .reset-btn{
+    display:block;margin:14px auto 0;background:none;border:none;
+    color:var(--dusk-soft);font-size:11.5px;font-weight:700;
+    text-decoration:underline;cursor:pointer;
+  }
+  .reset-btn:focus-visible{outline:2px solid var(--butter);outline-offset:2px;}
+</style>
+
+<div class="wrap">
+
+  <div class="header">
+    <div class="mascot" id="mascot" aria-hidden="true">🐱</div>
+    <div class="header-text" style="flex:1">
+      <h1 id="dateLabel">오늘</h1>
+      <p id="greeting">불러오는 중...</p>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row-between">
+      <h2>📅 오늘의 예상 일정</h2>
+      <span class="tag fixed">변동 가능</span>
+    </div>
+    <div class="schedule-text" id="scheduleText"></div>
+    <div class="item-sub" style="margin-top:6px;">회사 교육·회의·프로젝트로 언제든 밀릴 수 있는 일정이에요. 아래에서 오늘 실제 여유를 체크해주세요.</div>
+  </div>
+
+  <div class="card" style="border-color:var(--butter);">
+    <h2 style="color:var(--amber-text);">⏱️ 오늘 진짜 남은 시간, 얼마나 돼요?</h2>
+    <div class="item-sub" style="margin-bottom:10px;">일정이 밀려도 괜찮아요 — 지금 상황에 맞게 할 일을 다시 줄여줄게요</div>
+    <div class="capacity-row" id="capacityRow"></div>
+  </div>
+
+  <div class="card section-cat">
+    <h2>🐾 고양이 케어 (출근 전 필수)</h2>
+    <div id="catList"></div>
+  </div>
+
+  <div class="card section-faith">
+    <div class="row-between">
+      <h2>🕊️ 하나님과의 시간</h2>
+    </div>
+    <div id="faithList"></div>
+    <div class="row-between" style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);">
+      <div>
+        <div class="item-text">이번 주 찬양팀 서는 주간</div>
+        <div class="item-sub">켜두면 금/토 숙지 할일이 추가돼요</div>
+      </div>
+      <div class="toggle" id="worshipToggle" role="switch" aria-checked="false" tabindex="0"><div class="toggle-knob"></div></div>
+    </div>
+    <div id="worshipTask" style="display:none;margin-top:8px;"></div>
+  </div>
+
+  <div class="card">
+    <h2>🧼 나를 돌보는 시간</h2>
+    <div id="careList"></div>
+  </div>
+
+  <div class="card section-learn">
+    <h2>🎨 오늘의 배움 코칭</h2>
+    <div class="item-sub" id="learnFocus" style="margin-bottom:8px;"></div>
+    <div id="learnList"></div>
+    <textarea id="learnNote" placeholder="오늘 배운 내용 / 막힌 부분을 짧게 메모해두면, 다음에 대화할 때 이어서 코칭해줄 수 있어요"></textarea>
+  </div>
+
+  <div class="card section-hobby">
+    <h2>🌙 취미 &amp; 나를 위한 시간</h2>
+    <div id="hobbyList"></div>
+    <button class="movie-btn" id="movieBtn">🎬 오늘 뭐 볼지 추천받기</button>
+    <div class="movie-result" id="movieResult"></div>
+  </div>
+
+  <button class="reset-btn" id="resetBtn">오늘 체크 초기화</button>
+  <div class="footer-note">
+    체크 기록은 이 브라우저에 날짜별로 저장돼요.<br>
+    막히는 항목이 있으면 클로드한테 "오늘 디자인 학습 봐줘" 처럼 편하게 말 걸어주세요 🌿
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+function todayKey(){
+  const d = new Date();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,'0')+"-"+String(d.getDate()).padStart(2,'0');
+}
+const DAY_NAMES = ["일","월","화","수","목","금","토"];
+
+const SCHEDULES = {
+  0: "11:40까지 예배 → 4시쯤 청년부 일정 끝 → 이후 교회 일정 또는 남자친구와 시간",
+  1: "남자친구 만나는 날 🩷",
+  2: "늦잠 시 8시 기상 → 알바 출근 (9:40~19:30) → 퇴근·식사 ~21시\n(회사 코딩교육/회의/프로젝트 변동 가능)",
+  3: "심리상담 · 격주 2시 피부과 · 4시~ 코딩교육(귀가 밤 10시 넘을 수 있음) → 귀가 후 복습",
+  4: "늦잠 시 8시 기상 → 알바 출근 (9:40~19:30) → 퇴근·식사 ~21시\n(회사 코딩교육/회의/프로젝트 변동 가능)",
+  5: "늦잠 시 8시 기상 → 알바 출근 (9:40~19:30) → 퇴근·식사 ~21시\n(회사 코딩교육/회의/프로젝트 변동 가능)",
+  6: "격주 10~17:30 자격증 학원 · 19:30 찬양팀 연습 (결혼식 있는 주 있음)"
+};
+
+const LEARN_FOCUS = {
+  0: "오픈월드/픽셀 오피스 맵 레퍼런스 분석 or UX/UI 학습 이어가기",
+  1: "남자친구 만나는 날 — 학습은 쉬어가요",
+  2: "UX/UI 디자인 — 노션 학습 루틴 1챕터",
+  3: "코딩교육 있는 날 — 오늘 배운 것 정리",
+  4: "코딩 복습 — 최근 배운 내용 노션 정리 다시 읽고 손으로 따라치기",
+  5: "이번 주 UX/UI 또는 코딩 중 밀린 것 따라잡기 (택1)",
+  6: "학원 없는 주 → 오픈월드/픽셀 오피스 맵 레퍼런스 분석 or 일러스트 연습"
+};
+
+const CAPACITY_OPTIONS = [
+  {key:"none", label:"거의 없음"},
+  {key:"tiny", label:"5~10분"},
+  {key:"small", label:"15~30분"},
+  {key:"full", label:"30분+"}
+];
+
+function getLearnTaskForCapacity(cap, day){
+  if(day===1) return "남자친구 만나는 날 — 학습은 쉬어가요";
+  switch(cap){
+    case "none":
+      return "오늘은 학습 패스! 최소 루틴(고양이·기도·위생)만 챙겨도 충분해요";
+    case "tiny":
+      return "노션 학습 루틴 딱 한 문단만 읽기 (실행보다 '펼쳐보기'가 목표)";
+    case "small":
+      return "노션 학습 루틴 일부 or 어제 메모한 막힌 부분 하나만 풀어보기";
+    case "full":
+      return LEARN_FOCUS[day];
+    default:
+      return "먼저 오늘 남은 시간을 체크해주세요 ⏱️";
+  }
+}
+
+const HOBBY_SUGGEST = {
+  0: "음악감상 / 독서로 마무리",
+  1: "-",
+  2: "짧은 일기 + 음악감상",
+  3: "일기만 짧게, 오늘은 무리하지 않기",
+  4: "감도 높은 영화 하루 — 아래 추천 버튼 눌러보기",
+  5: "애니 or 드라마 (성우 발성/감정 참고용)",
+  6: "일러스트 낙서 or 노래 연습 (방음부스 가동!)"
+};
+
+const MOVIES = [
+  {t:"블레이드 러너 2049", w:"공간감·색채 조명 디자인 감 잡기 좋아요"},
+  {t:"her", w:"UI/인터랙션 디자인 레퍼런스로 자주 언급되는 작품"},
+  {t:"바람이 분다", w:"지브리 특유의 배경 미술과 공간 연출 참고"},
+  {t:"소울(Soul)", w:"픽사 색감·조명, 그리고 인물 감정 연기 참고용"},
+  {t:"위플래쉬", w:"몰입감 있는 감정 연기 — 발성/표현 훈련 참고"},
+  {t:"인사이드 아웃", w:"감정을 시각·목소리로 표현하는 방식 참고 (성우 연습에 도움)"},
+  {t:"스파이더맨: 뉴 유니버스", w:"과감한 그래픽·색보정, 창작 자극용"},
+  {t:"animal crossing 관련 다큐/리뷰 영상", w:"지금 맡은 픽셀 오피스 프로젝트 레퍼런스 직결"}
+];
+
+let state = {};
+let settings = { worship: false };
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem('daily:'+todayKey());
+    state = raw ? JSON.parse(raw) : {};
+  }catch(e){ state = {}; }
+  try{
+    const raw = localStorage.getItem('settings');
+    settings = raw ? JSON.parse(raw) : { worship:false };
+  }catch(e){ settings = { worship:false }; }
+}
+function saveState(){
+  try{ localStorage.setItem('daily:'+todayKey(), JSON.stringify(state)); }catch(e){}
+}
+function saveSettings(){
+  try{ localStorage.setItem('settings', JSON.stringify(settings)); }catch(e){}
+}
+
+const ITEM_DEFS = {
+  cat: [
+    ["catWater","물 채워주기"],
+    ["catLitter","화장실 치우기"],
+    ["catTeeth","양치시키기"],
+    ["catPlay","15분 이상 놀아주기 + 간식"]
+  ],
+  faith: [
+    ["prayer","기도하기"],
+    ["bible","말씀 읽기 (짧아도 OK)"]
+  ],
+  care: [
+    ["hygiene","세수·양치·샤워"],
+    ["stretch","3~5분 스트레칭"]
+  ],
+  learn: [
+    ["learnDone","오늘의 배움 실행하기"]
+  ],
+  hobby: [
+    ["journal","일기 짧게 쓰기"],
+    ["hobbyTime","취미/나를 위한 시간 갖기"]
+  ]
+};
+
+function onActivate(el, fn){
+  el.addEventListener('click', fn);
+  el.addEventListener('keydown', (e)=>{
+    if(e.key==='Enter' || e.key===' '){ e.preventDefault(); fn(); }
+  });
+}
+
+function renderList(containerId, defs){
+  const el = $(containerId);
+  el.innerHTML = "";
+  defs.forEach(([key,label])=>{
+    const checked = !!state[key];
+    const row = document.createElement('div');
+    row.className='item';
+    row.tabIndex = 0;
+    row.setAttribute('role','checkbox');
+    row.setAttribute('aria-checked', String(checked));
+    row.innerHTML = `<div class="checkbox ${checked?'checked':''}">${checked?'✓':''}</div>
+      <div class="item-text ${checked?'checked':''}">${label}</div>`;
+    onActivate(row, ()=>{
+      state[key] = !state[key];
+      saveState();
+      renderAll();
+    });
+    el.appendChild(row);
+  });
+}
+
+function updateProgress(){
+  const allKeys = Object.values(ITEM_DEFS).flat().map(d=>d[0]);
+  const total = allKeys.length + (settings.worship?1:0);
+  let done = allKeys.filter(k=>state[k]).length + (settings.worship && state.worshipDone ? 1:0);
+  const pct = total? Math.round(done/total*100) : 0;
+  $('progressFill').style.width = pct+"%";
+  const mascotEl = $('mascot');
+  if(pct===0) mascotEl.textContent="🐱";
+  else if(pct<40) mascotEl.textContent="😺";
+  else if(pct<80) mascotEl.textContent="😸";
+  else mascotEl.textContent="😻";
+  $('greeting').textContent = pct===100 ? "오늘 할 일 다 끝냈어요! 잘했어요 🌿" : `오늘 ${pct}% 완료했어요`;
+}
+
+function renderWorship(){
+  const day = new Date().getDay();
+  const toggle = $('worshipToggle');
+  toggle.classList.toggle('on', settings.worship);
+  toggle.setAttribute('aria-checked', String(settings.worship));
+  const taskBox = $('worshipTask');
+  if(settings.worship && (day===5 || day===6)){
+    taskBox.style.display='block';
+    const checked = !!state.worshipDone;
+    taskBox.innerHTML = `<div class="item" style="border:none;padding:0;" tabindex="0" role="checkbox" aria-checked="${checked}">
+      <div class="checkbox ${checked?'checked':''}" id="worshipCheckbox">${checked?'✓':''}</div>
+      <div>
+        <div class="item-text ${checked?'checked':''}">찬양 숙지하기</div>
+        <div class="item-sub">${day===5?'내일 토요일 연습 전에 미리 숙지해두면 편해요':'오늘 저녁 연습 있어요'}</div>
+      </div></div>`;
+    onActivate(taskBox.querySelector('.item'), ()=>{
+      state.worshipDone = !state.worshipDone;
+      saveState(); renderAll();
+    });
+  } else {
+    taskBox.style.display='none';
+  }
+}
+
+function renderCapacity(){
+  const el = $('capacityRow');
+  el.innerHTML = "";
+  CAPACITY_OPTIONS.forEach(opt=>{
+    const btn = document.createElement('div');
+    btn.className = 'cap-btn' + (state.capacity===opt.key ? ' active':'');
+    btn.textContent = opt.label;
+    btn.tabIndex = 0;
+    btn.setAttribute('role','radio');
+    btn.setAttribute('aria-checked', String(state.capacity===opt.key));
+    onActivate(btn, ()=>{
+      state.capacity = opt.key;
+      saveState();
+      renderAll();
+    });
+    el.appendChild(btn);
+  });
+}
+
+function renderAll(){
+  const day = new Date().getDay();
+  $('dateLabel').textContent = `${new Date().getMonth()+1}월 ${new Date().getDate()}일 (${DAY_NAMES[day]})`;
+  $('scheduleText').textContent = SCHEDULES[day];
+  renderCapacity();
+  $('learnFocus').textContent = "🎯 " + getLearnTaskForCapacity(state.capacity, day);
+  renderList('catList', ITEM_DEFS.cat);
+  renderList('faithList', ITEM_DEFS.faith);
+  renderList('careList', ITEM_DEFS.care);
+  renderList('learnList', ITEM_DEFS.learn);
+  renderList('hobbyList', ITEM_DEFS.hobby);
+  $('hobbyList').insertAdjacentHTML('beforeend', `<div class="item-sub" style="padding:6px 4px 0;">💡 오늘 추천: ${HOBBY_SUGGEST[day]}</div>`);
+  renderWorship();
+  updateProgress();
+}
+
+onActivate($('worshipToggle'), ()=>{
+  settings.worship = !settings.worship;
+  saveSettings();
+  renderAll();
+});
+
+$('movieBtn').onclick = ()=>{
+  const pick = MOVIES[Math.floor(Math.random()*MOVIES.length)];
+  const box = $('movieResult');
+  box.style.display='block';
+  box.innerHTML = `<b>${pick.t}</b><br>${pick.w}`;
+};
+
+$('learnNote').addEventListener('blur', ()=>{
+  try{ localStorage.setItem('learnNote:'+todayKey(), $('learnNote').value); }catch(e){}
+});
+(function(){
+  try{
+    const v = localStorage.getItem('learnNote:'+todayKey());
+    if(v) $('learnNote').value = v;
+  }catch(e){}
+})();
+
+$('resetBtn').onclick = ()=>{
+  if(confirm("오늘 체크한 항목을 전부 초기화할까요?")){
+    state = {};
+    saveState();
+    renderAll();
+  }
+};
+
+loadState();
+renderAll();
+</script>

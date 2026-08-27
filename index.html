@@ -246,6 +246,19 @@
   .sched-row{margin-bottom:12px;}
   .sched-row label{display:block;font-size:12.5px;font-weight:800;margin-bottom:5px;color:var(--dusk);}
   .sched-row textarea{min-height:60px;font-size:12.5px;}
+  .section-title-row{
+    display:flex;align-items:center;gap:8px;margin-bottom:10px;
+    padding-bottom:10px;border-bottom:1.5px dashed var(--line);
+  }
+  .section-title-row input[type="text"]{
+    flex:1;font-family:'DynaPuff',cursive;font-size:14px;padding:9px 10px;
+  }
+  .add-section-btn{
+    width:100%;border:2px solid var(--dusk);background:var(--sage-light);
+    border-radius:12px;padding:11px 14px;font-family:'Nunito',sans-serif;
+    font-weight:800;font-size:13px;cursor:pointer;color:var(--dusk);margin-top:4px;
+  }
+  .add-section-btn:focus-visible{outline:2px solid var(--butter);outline-offset:2px;}
   .modal-footer{display:flex;gap:8px;margin-top:6px;position:sticky;bottom:0;background:var(--paper);padding-top:10px;}
   .btn-primary,.btn-secondary{
     flex:1;padding:11px;border-radius:12px;font-family:'Nunito',sans-serif;
@@ -284,44 +297,7 @@
     <div class="capacity-row" id="capacityRow"></div>
   </div>
 
-  <div class="card section-cat">
-    <h2>🐾 고양이 케어 (출근 전 필수)</h2>
-    <div id="catList"></div>
-  </div>
-
-  <div class="card section-faith">
-    <div class="row-between">
-      <h2>🕊️ 하나님과의 시간</h2>
-    </div>
-    <div id="faithList"></div>
-    <div class="row-between" style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);">
-      <div>
-        <div class="item-text">이번 주 찬양팀 서는 주간</div>
-        <div class="item-sub">켜두면 금/토 숙지 할일이 추가돼요</div>
-      </div>
-      <div class="toggle" id="worshipToggle" role="switch" aria-checked="false" tabindex="0"><div class="toggle-knob"></div></div>
-    </div>
-    <div id="worshipTask" style="display:none;margin-top:8px;"></div>
-  </div>
-
-  <div class="card">
-    <h2>🧼 나를 돌보는 시간</h2>
-    <div id="careList"></div>
-  </div>
-
-  <div class="card section-learn">
-    <h2>🎨 오늘의 배움 코칭</h2>
-    <div class="item-sub" id="learnFocus" style="margin-bottom:8px;"></div>
-    <div id="learnList"></div>
-    <textarea id="learnNote" placeholder="오늘 배운 내용 / 막힌 부분을 짧게 메모해두면, 다음에 대화할 때 이어서 코칭해줄 수 있어요"></textarea>
-  </div>
-
-  <div class="card section-hobby">
-    <h2>🌙 취미 &amp; 나를 위한 시간</h2>
-    <div id="hobbyList"></div>
-    <button class="movie-btn" id="movieBtn">🎬 오늘 뭐 볼지 추천받기</button>
-    <div class="movie-result" id="movieResult"></div>
-  </div>
+  <div id="sectionsContainer"></div>
 
   <button class="reset-btn" id="resetBtn">오늘 체크 초기화</button>
   <div class="footer-note">
@@ -435,36 +411,28 @@ const MOVIES = [
   {t:"animal crossing 관련 다큐/리뷰 영상", w:"지금 맡은 픽셀 오피스 프로젝트 레퍼런스 직결"}
 ];
 
-const DEFAULT_ITEM_DEFS = {
-  cat: [
+const DEFAULT_SECTIONS = [
+  {id:"cat", label:"🐾 고양이 케어 (출근 전 필수)", items:[
     ["catWater","물 채워주기"],
     ["catLitter","화장실 치우기"],
     ["catTeeth","양치시키기"],
     ["catPlay","15분 이상 놀아주기 + 간식"]
-  ],
-  faith: [
+  ]},
+  {id:"faith", label:"🕊️ 하나님과의 시간", items:[
     ["prayer","기도하기"],
     ["bible","말씀 읽기 (짧아도 OK)"]
-  ],
-  care: [
+  ]},
+  {id:"care", label:"🧼 나를 돌보는 시간", items:[
     ["hygiene","세수·양치·샤워"],
     ["stretch","3~5분 스트레칭"]
-  ],
-  learn: [
+  ]},
+  {id:"learn", label:"🎨 오늘의 배움 코칭", items:[
     ["learnDone","오늘의 배움 실행하기"]
-  ],
-  hobby: [
+  ]},
+  {id:"hobby", label:"🌙 취미 & 나를 위한 시간", items:[
     ["journal","일기 짧게 쓰기"],
     ["hobbyTime","취미/나를 위한 시간 갖기"]
-  ]
-};
-
-const SECTION_META = [
-  {key:"cat", label:"🐾 고양이 케어"},
-  {key:"faith", label:"🕊️ 하나님과의 시간"},
-  {key:"care", label:"🧼 나를 돌보는 시간"},
-  {key:"learn", label:"🎨 오늘의 배움"},
-  {key:"hobby", label:"🌙 취미 & 나를 위한 시간"}
+  ]}
 ];
 
 function loadJSON(key, fallback){
@@ -473,11 +441,28 @@ function loadJSON(key, fallback){
     return raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(fallback));
   }catch(e){ return JSON.parse(JSON.stringify(fallback)); }
 }
+function loadRaw(key){
+  try{
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
 function saveJSON(key, value){
   try{ localStorage.setItem(key, JSON.stringify(value)); }catch(e){}
 }
 
-let itemDefs = loadJSON('custom:itemDefs', DEFAULT_ITEM_DEFS);
+function loadSections(){
+  const saved = loadRaw('custom:sections');
+  if(saved) return saved;
+  const sections = JSON.parse(JSON.stringify(DEFAULT_SECTIONS));
+  const oldItemDefs = loadRaw('custom:itemDefs');
+  if(oldItemDefs){
+    sections.forEach(sec=>{ if(oldItemDefs[sec.id]) sec.items = oldItemDefs[sec.id]; });
+  }
+  return sections;
+}
+
+let sections = loadSections();
 let schedules = loadJSON('custom:schedules', DEFAULT_SCHEDULES);
 
 let state = {};
@@ -497,8 +482,7 @@ function onActivate(el, fn){
   });
 }
 
-function renderList(containerId, defs){
-  const el = $(containerId);
+function renderListInto(el, defs){
   el.innerHTML = "";
   defs.forEach(([key,label])=>{
     const checked = !!state[key];
@@ -519,36 +503,12 @@ function renderList(containerId, defs){
 }
 
 function updateProgress(){
-  const allKeys = Object.values(itemDefs).flat().map(d=>d[0]);
+  const allKeys = sections.flatMap(s=>s.items).map(d=>d[0]);
   const total = allKeys.length + (settings.worship?1:0);
   let done = allKeys.filter(k=>state[k]).length + (settings.worship && state.worshipDone ? 1:0);
   const pct = total? Math.round(done/total*100) : 0;
   $('progressFill').style.width = pct+"%";
   $('greeting').textContent = pct===100 ? "오늘 할 일 다 끝냈어요! 잘했어요 🌿" : `오늘 ${pct}% 완료했어요`;
-}
-
-function renderWorship(){
-  const day = new Date().getDay();
-  const toggle = $('worshipToggle');
-  toggle.classList.toggle('on', settings.worship);
-  toggle.setAttribute('aria-checked', String(settings.worship));
-  const taskBox = $('worshipTask');
-  if(settings.worship && (day===5 || day===6)){
-    taskBox.style.display='block';
-    const checked = !!state.worshipDone;
-    taskBox.innerHTML = `<div class="item" style="border:none;padding:0;" tabindex="0" role="checkbox" aria-checked="${checked}">
-      <div class="checkbox ${checked?'checked':''}" id="worshipCheckbox">${checked?'✓':''}</div>
-      <div>
-        <div class="item-text ${checked?'checked':''}">찬양 숙지하기</div>
-        <div class="item-sub">${day===5?'내일 토요일 연습 전에 미리 숙지해두면 편해요':'오늘 저녁 연습 있어요'}</div>
-      </div></div>`;
-    onActivate(taskBox.querySelector('.item'), ()=>{
-      state.worshipDone = !state.worshipDone;
-      saveState(); renderAll();
-    });
-  } else {
-    taskBox.style.display='none';
-  }
 }
 
 function renderCapacity(){
@@ -570,44 +530,118 @@ function renderCapacity(){
   });
 }
 
+function buildSectionCard(sec, day){
+  const card = document.createElement('div');
+  card.className = 'card' +
+    (sec.id==='cat'?' section-cat':sec.id==='faith'?' section-faith':
+     sec.id==='learn'?' section-learn':sec.id==='hobby'?' section-hobby':'');
+
+  const h2 = document.createElement('h2');
+  h2.textContent = sec.label;
+  card.appendChild(h2);
+
+  if(sec.id==='learn'){
+    const focus = document.createElement('div');
+    focus.className = 'item-sub';
+    focus.style.marginBottom = '8px';
+    focus.textContent = "🎯 " + getLearnTaskForCapacity(state.capacity, day);
+    card.appendChild(focus);
+  }
+
+  const listEl = document.createElement('div');
+  card.appendChild(listEl);
+  renderListInto(listEl, sec.items || []);
+
+  if(sec.id==='faith'){
+    const row = document.createElement('div');
+    row.className = 'row-between';
+    row.style.cssText = 'margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);';
+    row.innerHTML = `<div>
+      <div class="item-text">이번 주 찬양팀 서는 주간</div>
+      <div class="item-sub">켜두면 금/토 숙지 할일이 추가돼요</div>
+    </div>`;
+    const toggle = document.createElement('div');
+    toggle.className = 'toggle' + (settings.worship?' on':'');
+    toggle.setAttribute('role','switch');
+    toggle.setAttribute('aria-checked', String(settings.worship));
+    toggle.tabIndex = 0;
+    toggle.innerHTML = '<div class="toggle-knob"></div>';
+    onActivate(toggle, ()=>{ settings.worship = !settings.worship; saveSettings(); renderAll(); });
+    row.appendChild(toggle);
+    card.appendChild(row);
+
+    if(settings.worship && (day===5 || day===6)){
+      const checked = !!state.worshipDone;
+      const taskBox = document.createElement('div');
+      taskBox.style.marginTop = '8px';
+      taskBox.innerHTML = `<div class="item" style="border:none;padding:0;" tabindex="0" role="checkbox" aria-checked="${checked}">
+        <div class="checkbox ${checked?'checked':''}">${checked?'✓':''}</div>
+        <div>
+          <div class="item-text ${checked?'checked':''}">찬양 숙지하기</div>
+          <div class="item-sub">${day===5?'내일 토요일 연습 전에 미리 숙지해두면 편해요':'오늘 저녁 연습 있어요'}</div>
+        </div></div>`;
+      onActivate(taskBox.querySelector('.item'), ()=>{
+        state.worshipDone = !state.worshipDone;
+        saveState(); renderAll();
+      });
+      card.appendChild(taskBox);
+    }
+  }
+
+  if(sec.id==='learn'){
+    const ta = document.createElement('textarea');
+    ta.placeholder = '오늘 배운 내용 / 막힌 부분을 짧게 메모해두면, 다음에 대화할 때 이어서 코칭해줄 수 있어요';
+    try{
+      const v = localStorage.getItem('learnNote:'+todayKey());
+      if(v) ta.value = v;
+    }catch(e){}
+    ta.addEventListener('blur', ()=>{
+      try{ localStorage.setItem('learnNote:'+todayKey(), ta.value); }catch(e){}
+    });
+    card.appendChild(ta);
+  }
+
+  if(sec.id==='hobby'){
+    const sug = document.createElement('div');
+    sug.className = 'item-sub';
+    sug.style.padding = '6px 4px 0';
+    sug.textContent = '💡 오늘 추천: ' + HOBBY_SUGGEST[day];
+    card.appendChild(sug);
+
+    const btn = document.createElement('button');
+    btn.className = 'movie-btn';
+    btn.type = 'button';
+    btn.textContent = '🎬 오늘 뭐 볼지 추천받기';
+    const result = document.createElement('div');
+    result.className = 'movie-result';
+    btn.onclick = ()=>{
+      const pick = MOVIES[Math.floor(Math.random()*MOVIES.length)];
+      result.style.display = 'block';
+      result.innerHTML = `<b>${pick.t}</b><br>${pick.w}`;
+    };
+    card.appendChild(btn);
+    card.appendChild(result);
+  }
+
+  return card;
+}
+
+function renderSections(day){
+  const container = $('sectionsContainer');
+  container.innerHTML = '';
+  sections.forEach(sec=>{
+    container.appendChild(buildSectionCard(sec, day));
+  });
+}
+
 function renderAll(){
   const day = new Date().getDay();
   $('dateLabel').textContent = `${new Date().getMonth()+1}월 ${new Date().getDate()}일 (${DAY_NAMES[day]})`;
   $('scheduleText').textContent = schedules[day];
   renderCapacity();
-  $('learnFocus').textContent = "🎯 " + getLearnTaskForCapacity(state.capacity, day);
-  renderList('catList', itemDefs.cat);
-  renderList('faithList', itemDefs.faith);
-  renderList('careList', itemDefs.care);
-  renderList('learnList', itemDefs.learn);
-  renderList('hobbyList', itemDefs.hobby);
-  $('hobbyList').insertAdjacentHTML('beforeend', `<div class="item-sub" style="padding:6px 4px 0;">💡 오늘 추천: ${HOBBY_SUGGEST[day]}</div>`);
-  renderWorship();
+  renderSections(day);
   updateProgress();
 }
-
-onActivate($('worshipToggle'), ()=>{
-  settings.worship = !settings.worship;
-  saveSettings();
-  renderAll();
-});
-
-$('movieBtn').onclick = ()=>{
-  const pick = MOVIES[Math.floor(Math.random()*MOVIES.length)];
-  const box = $('movieResult');
-  box.style.display='block';
-  box.innerHTML = `<b>${pick.t}</b><br>${pick.w}`;
-};
-
-$('learnNote').addEventListener('blur', ()=>{
-  try{ localStorage.setItem('learnNote:'+todayKey(), $('learnNote').value); }catch(e){}
-});
-(function(){
-  try{
-    const v = localStorage.getItem('learnNote:'+todayKey());
-    if(v) $('learnNote').value = v;
-  }catch(e){}
-})();
 
 $('resetBtn').onclick = ()=>{
   if(confirm("오늘 체크한 항목을 전부 초기화할까요?")){
@@ -624,7 +658,7 @@ function dayPct(dateStr){
   if(!raw) return null;
   let rec;
   try{ rec = JSON.parse(raw); }catch(e){ return null; }
-  const keys = Object.values(itemDefs).flat().map(d=>d[0]);
+  const keys = sections.flatMap(s=>s.items).map(d=>d[0]);
   if(keys.length===0) return null;
   const done = keys.filter(k=>rec[k]).length;
   return Math.round(done/keys.length*100);
@@ -685,34 +719,52 @@ onActivate($('closePanelBtn'), closePanel);
 
 /* ---------- settings modal: categories + schedule ---------- */
 
-let draftItemDefs = null;
+let draftSections = null;
 let draftSchedules = null;
 
 function renderCategoryTab(){
   const el = $('tabCategory');
   el.innerHTML = "";
-  SECTION_META.forEach(sec=>{
+  draftSections.forEach((sec, secIdx)=>{
     const wrap = document.createElement('div');
     wrap.className = 'settings-section';
-    const h3 = document.createElement('h3');
-    h3.textContent = sec.label;
-    wrap.appendChild(h3);
 
-    (draftItemDefs[sec.key] || []).forEach((pair, idx)=>{
+    const titleRow = document.createElement('div');
+    titleRow.className = 'section-title-row';
+    const titleInput = document.createElement('input');
+    titleInput.type = 'text';
+    titleInput.value = sec.label;
+    titleInput.placeholder = '카테고리 이름 (예: 🏋️ 운동)';
+    titleInput.setAttribute('aria-label','카테고리 제목');
+    titleInput.addEventListener('input', ()=>{ draftSections[secIdx].label = titleInput.value; });
+    const delSecBtn = document.createElement('button');
+    delSecBtn.className = 'del-btn';
+    delSecBtn.type = 'button';
+    delSecBtn.textContent = '✕';
+    delSecBtn.setAttribute('aria-label','카테고리 삭제');
+    delSecBtn.onclick = ()=>{
+      draftSections.splice(secIdx,1);
+      renderCategoryTab();
+    };
+    titleRow.appendChild(titleInput);
+    titleRow.appendChild(delSecBtn);
+    wrap.appendChild(titleRow);
+
+    (sec.items || []).forEach((pair, idx)=>{
       const row = document.createElement('div');
       row.className = 'edit-row';
       const input = document.createElement('input');
       input.type = 'text';
       input.value = pair[1];
       input.setAttribute('aria-label', sec.label+' 항목');
-      input.addEventListener('input', ()=>{ draftItemDefs[sec.key][idx][1] = input.value; });
+      input.addEventListener('input', ()=>{ draftSections[secIdx].items[idx][1] = input.value; });
       const del = document.createElement('button');
       del.className = 'del-btn';
       del.type = 'button';
       del.textContent = '✕';
       del.setAttribute('aria-label','항목 삭제');
       del.onclick = ()=>{
-        draftItemDefs[sec.key].splice(idx,1);
+        draftSections[secIdx].items.splice(idx,1);
         renderCategoryTab();
       };
       row.appendChild(input);
@@ -725,13 +777,23 @@ function renderCategoryTab(){
     addBtn.type = 'button';
     addBtn.textContent = '+ 항목 추가';
     addBtn.onclick = ()=>{
-      if(!draftItemDefs[sec.key]) draftItemDefs[sec.key] = [];
-      draftItemDefs[sec.key].push(['custom_'+Date.now(), '']);
+      if(!draftSections[secIdx].items) draftSections[secIdx].items = [];
+      draftSections[secIdx].items.push(['custom_'+Date.now(), '']);
       renderCategoryTab();
     };
     wrap.appendChild(addBtn);
     el.appendChild(wrap);
   });
+
+  const addSectionBtn = document.createElement('button');
+  addSectionBtn.className = 'add-section-btn';
+  addSectionBtn.type = 'button';
+  addSectionBtn.textContent = '+ 카테고리 추가';
+  addSectionBtn.onclick = ()=>{
+    draftSections.push({id:'custom_sec_'+Date.now(), label:'', items:[]});
+    renderCategoryTab();
+  };
+  el.appendChild(addSectionBtn);
 }
 
 function renderScheduleTab(){
@@ -754,7 +816,7 @@ function renderScheduleTab(){
 }
 
 function openSettings(){
-  draftItemDefs = JSON.parse(JSON.stringify(itemDefs));
+  draftSections = JSON.parse(JSON.stringify(sections));
   draftSchedules = JSON.parse(JSON.stringify(schedules));
   renderCategoryTab();
   renderScheduleTab();
@@ -789,13 +851,15 @@ onActivate($('tabScheduleBtn'), ()=>{
 });
 
 onActivate($('saveSettingsBtn'), ()=>{
-  Object.keys(draftItemDefs).forEach(k=>{
-    draftItemDefs[k] = draftItemDefs[k].filter(pair=>pair[1].trim()!=='');
+  draftSections = draftSections.filter(sec=>sec.label.trim()!=='');
+  draftSections.forEach(sec=>{
+    sec.items = (sec.items||[]).filter(pair=>pair[1].trim()!=='');
   });
-  itemDefs = draftItemDefs;
+  sections = draftSections;
   schedules = draftSchedules;
-  saveJSON('custom:itemDefs', itemDefs);
+  saveJSON('custom:sections', sections);
   saveJSON('custom:schedules', schedules);
+  try{ localStorage.removeItem('custom:itemDefs'); }catch(e){}
   closeSettings();
   closePanel();
   renderAll();
